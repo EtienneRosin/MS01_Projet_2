@@ -77,8 +77,13 @@ void buildProblem(Problem& p, Mesh& mesh, double alpha, ScaVector& f);
 // Solution of the system Au=b with Jacobi
 void jacobi(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, int maxit);
 
+// Solution of the system Au=b with Conjugate Gradient
+void conjgrad(SpMatrix &A, ScaVector &b, ScaVector &u, Mesh &mesh, double tol, int maxit);
 
 //==== Functions in 'utils.cpp'
+
+double localDotProduct2(const ScaVector &u, const ScaVector &v, const Mesh &mesh);
+
 // Compute the local squared norm 2 e.g. \sum_i u_i^2
 double localSquaredNorm2(const ScaVector& u, const Mesh& mesh);
 

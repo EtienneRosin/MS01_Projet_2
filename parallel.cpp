@@ -59,7 +59,7 @@ void buildListsNodesMPI(Mesh& mesh)
         }
       }
       mesh.numNodesToExch(nTask) = count;
-      cout << "   -> task " << myRank << " send/recv " << mesh.numNodesToExch(nTask) << " nodes with task " << nTask << endl;
+      // cout << "   -> task " << myRank << " send/recv " << mesh.numNodesToExch(nTask) << " nodes with task " << nTask << endl;
     }
   }
   if(mesh.numNodesToExch.maxCoeff() > 0){
@@ -123,7 +123,6 @@ void buildListsNodesMPI(Mesh& mesh)
 
 void exchangeAddInterfMPI(ScaVector& vec, Mesh& mesh)
 {
-
   vector<MPI_Request> requestSnd(nbTasks);
   vector<MPI_Request> requestRcv(nbTasks);
   MPI_Status status;

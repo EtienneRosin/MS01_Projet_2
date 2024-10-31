@@ -9,11 +9,11 @@ int nbTasks;
 
 int main(int argc, char* argv[])
 {
-  
-  // 1. Initialize MPI
+  // 1. Initialize MPI ----------------------------------------------
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
   MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
+
 
   // 2. Read the mesh, and build lists of nodes for MPI exchanges, local numbering
   if(argc != 2){
@@ -24,7 +24,8 @@ int main(int argc, char* argv[])
   readMsh(mesh, argv[1]);
   buildListsNodesMPI(mesh);
   
-  // 3. Build problem (vectors and matrices)
+
+  // 3. Build problem (vectors and matrices) ------------------------
   double alpha = 1.;
   double a = 2.;
   double b = 1.;
@@ -44,18 +45,20 @@ int main(int argc, char* argv[])
   
   buildProblem(pbm,mesh,alpha,f);
   
-  // 4. Solve problem
+
+  // 4. Solve problem -----------------------------------------------
   double tol = 1e-9; // (Currently useless)
-  int maxit = 1000000;
+  int maxit = 700;
   jacobi(pbm.A, pbm.b, uNum, mesh, tol, maxit);
-  
-  // 5. Compute error and export fields
+  // conjgrad(pbm.A, pbm.b, uNum, mesh, tol, maxit);
+
+
+  // 5. Compute error and export fields -----------------------------
   ScaVector uErr = uNum - uExa;
   exportFieldMsh(uNum, mesh, "solNum", "results/solNum.msh");
   exportFieldMsh(uExa, mesh, "solRef", "results/solExa.msh");
   exportFieldMsh(uErr, mesh, "solErr", "results/solErr.msh");
 
-  // std::cout << "local L2 error : " << squaredNormL2(uErr, pbm) << "\n";
   double localSquaredError = squaredNormL2(uErr, pbm);
   double globalSquaredError = 0.0;
   MPI_Reduce(
@@ -69,7 +72,8 @@ int main(int argc, char* argv[])
     std::cout << "error : " << std::sqrt(globalSquaredError) << "\n";
   }
   
-  // 6. Finilize MPI
+
+  // 6. Finilize MPI ------------------------------------------------
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
   
