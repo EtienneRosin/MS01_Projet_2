@@ -12,8 +12,9 @@ void jacobi(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, int
   if(myRank == 0)
     cout << "== Jacobi (tol " << tol << "; maxit " << maxit << ")" << endl;
   
-  // Compute the solver matrices
+  // Compute the solver matrices (regular decomposition)
   int size = A.rows();
+  
   ScaVector Mdiag(size);
   SpMatrix N(size, size);
   for(int k=0; k<A.outerSize(); ++k){
@@ -24,19 +25,24 @@ void jacobi(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, int
         N.coeffRef(it.row(), it.col()) = -it.value();
     }
   }
+
   exchangeAddInterfMPI(Mdiag, mesh);
   
   // Jacobi solver
     // Computing the initial residual
   double initialResidu = 0.0;
   ScaVector Au = A * u;
+  MPI_Barrier(MPI_COMM_WORLD);
   exchangeAddInterfMPI(Au, mesh);
-  ScaVector initialLocalResidu = b - Au;
-  double localSquaredResidu = localSquaredNorm2(initialLocalResidu, mesh);
+  ScaVector r = b - Au;
+  MPI_Barrier(MPI_COMM_WORLD);
+  double localSquaredResidu = localSquaredNorm2(r, mesh);
   double squaredResidu = 0.0;
+  MPI_Barrier(MPI_COMM_WORLD);
   MPI_Allreduce(&localSquaredResidu, &squaredResidu, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   initialResidu = std::sqrt(squaredResidu);
 
+  // cout << "p = " << myRank << ", initialResidu = " << initialResidu << endl;
   if (myRank == 0)
   {
     cout << "   [0] residual: " << initialResidu << endl;
@@ -58,8 +64,8 @@ void jacobi(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, int
     // Update residual and iterator
     Au = A * u;
     exchangeAddInterfMPI(Au, mesh);
-    ScaVector localResiduVector = b - Au;
-    double localSquaredResidu = localSquaredNorm2(localResiduVector, mesh);
+    r = b - Au;
+    double localSquaredResidu = localSquaredNorm2(r, mesh);
     double squaredResidu = 0.0;
     MPI_Allreduce(
         &localSquaredResidu,
@@ -115,6 +121,7 @@ void conjgrad(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, i
     int it = 1;
 
     ScaVector Ap_l(u.size());
+    ScaVector Ar_l(u.size());
     double alpha_l = 0.0, beta_l = 0.0, A_p_l_dot_p_l = 0.0, local_A_p_l_dot_p_l = 0.0;
     double r_l_dot_p_l = 0.0, local_r_l_dot_p_l = 0.0, local_A_r_l_dot_p_l = 0.0, A_r_l_dot_p_l = 0.0;
     if (myRank == 0)
@@ -133,6 +140,7 @@ void conjgrad(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, i
         local_r_l_dot_p_l = localDotProduct2(r_l, p_l, mesh);
         MPI_Allreduce(&local_r_l_dot_p_l, &r_l_dot_p_l, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         alpha_l = r_l_dot_p_l / A_p_l_dot_p_l;
+        // cout << "p = " << myRank << ", alpha_l = " << alpha_l << endl;
 
 
         // Update solution and residual
@@ -140,13 +148,16 @@ void conjgrad(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, i
         r_l -= alpha_l * Ap_l;
 
         // Update direction with beta
-        local_A_r_l_dot_p_l = localDotProduct2(A * r_l, p_l, mesh);
+        Ar_l = A * r_l;
+        exchangeAddInterfMPI(Ar_l, mesh);
+        local_A_r_l_dot_p_l = localDotProduct2(Ar_l, p_l, mesh);
         MPI_Allreduce(&local_A_r_l_dot_p_l, &A_r_l_dot_p_l, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         beta_l = -A_r_l_dot_p_l / A_p_l_dot_p_l;
+        // cout << "p = " << myRank << ", beta_l = " << beta_l << endl;
         p_l = r_l + beta_l * p_l;
 
         // Compute new residual norm
-        localSquaredResidu = localSquaredNorm2(r_l, mesh);
+        localSquaredResidu = localSquaredNorm2(p_l, mesh);
         MPI_Allreduce(&localSquaredResidu, &squaredResidu, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         residuNorm = std::sqrt(squaredResidu);
 

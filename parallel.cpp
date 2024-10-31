@@ -106,15 +106,34 @@ void buildListsNodesMPI(Mesh& mesh)
   mesh.triNodes = triNodesMyRank;
 
     // create the nodeMultiplicity vector 
-  mesh.nodeMultiplicity.resize(mesh.nbOfNodes);
-  mesh.nodeMultiplicity.setZero();
-  for (int nodeIndex : mesh.nodesToExch.reshaped())
-  {
-    if (nodeIndex != 0){
-      mesh.nodeMultiplicity(nodeIndex - 1)++;
+  std::unordered_map<int, int> nodeMultiplicityMap;
+
+  for (int nTask = 0; nTask < nbTasks; nTask++) {
+    if (nTask != myRank) {
+      for (int nExch = 0; nExch < mesh.numNodesToExch(nTask); nExch++) {
+        int nodeIndex = mesh.nodesToExch(nTask, nExch);
+        // if (nodeIndex > 0) {
+        //     nodeMultiplicityMap[nodeIndex]++;
+        // }
+        nodeMultiplicityMap[nodeIndex]++;
+      }
     }
   }
- 
+
+  mesh.nodeMultiplicity.resize(mesh.nbOfNodes);
+  mesh.nodeMultiplicity.setZero();
+
+  for (std::unordered_map<int, int>::const_iterator it = nodeMultiplicityMap.begin(); it != nodeMultiplicityMap.end(); ++it) {
+    int nodeIndex = it->first;
+    int multiplicity = it->second;
+    // cout << "nodeIndex : " << nodeIndex << ", multiplicity : " << multiplicity << endl;
+    mesh.nodeMultiplicity(nodeIndex) = multiplicity;
+    // if (nodeIndex > 0) {
+    //   cout << "nodeIndex : " << nodeIndex << ", multiplicity : " << multiplicity << endl;
+    //   mesh.nodeMultiplicity(nodeIndex - 1) = multiplicity;
+    // }
+  }
+  // cout << mesh.nodeMultiplicity << endl;
 }
 
 //================================================================================
@@ -123,6 +142,7 @@ void buildListsNodesMPI(Mesh& mesh)
 
 void exchangeAddInterfMPI(ScaVector& vec, Mesh& mesh)
 {
+  
   vector<MPI_Request> requestSnd(nbTasks);
   vector<MPI_Request> requestRcv(nbTasks);
   MPI_Status status;
