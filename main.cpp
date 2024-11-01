@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
   // 4. Solve problem -----------------------------------------------
   double tol = 1e-9; // (Currently useless)
-  int maxit = 700;
+  int maxit = 1000000;
   // jacobi(pbm.A, pbm.b, uNum, mesh, tol, maxit);
   conjgrad(pbm.A, pbm.b, uNum, mesh, tol, maxit);
 

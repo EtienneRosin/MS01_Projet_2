@@ -2,7 +2,7 @@ Mesh.MshFileVersion = 2.2;
 
 a = 2;
 b = 1;
-h = 0.06;
+h = 0.075;
 #h = 0.025;
 
 

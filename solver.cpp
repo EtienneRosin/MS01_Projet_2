@@ -78,7 +78,7 @@ void jacobi(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, int
     residuNorm = std::sqrt(squaredResidu);
     
 
-    if ((it % 100) == 0)
+    if ((it % 1000) == 0)
     {
       if(myRank == 0)
         cout << "   [" << it << "] residual: " << residuNorm << endl;
@@ -168,7 +168,7 @@ void conjgrad(SpMatrix& A, ScaVector& b, ScaVector& u, Mesh& mesh, double tol, i
             break;
         }
 
-        if ((it % 100) == 0 && myRank == 0)  // Display every 10 iterations
+        if ((it % 1000) == 0 && myRank == 0)  // Display every 10 iterations
             cout << "   [" << it << "] residual: " << residuNorm << endl;
 
         it++;
