@@ -6,6 +6,7 @@
 #include <Eigen>
 #include <cmath>
 #include <mpi.h>
+#include <unordered_map>
 
 using namespace std;
 
