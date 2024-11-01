@@ -1,18 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-file_name = "validation/asymptotic_accuracy/jacobi_asymptotic_acuracy_measurement.csv"
-file_name = "validation/asymptotic_accuracy/conjugate_gradient_asymptotic_acuracy_measurement.csv"
+jacobi_file_name = "validation/asymptotic_accuracy/jacobi_asymptotic_acuracy_measurement.csv"
+conjugate_gradient_file_name = "validation/asymptotic_accuracy/conjugate_gradient_asymptotic_acuracy_measurement.csv"
 file_props = dict(dtype = float, delimiter = ',', names=True)
 
-data = np.genfromtxt(fname = file_name, **file_props)
-
-print(data['h'])
+jacobi_data = np.genfromtxt(fname = jacobi_file_name, **file_props)
+conjugate_gradient_data = np.genfromtxt(fname = conjugate_gradient_file_name, **file_props)
+# print(data['h'])
 
 fig = plt.figure()
 ax = fig.add_subplot()
 
+line_props = dict(marker = "o", linestyle = "--", linewidth = 1)
 
-ax.plot(np.log(data['h']), np.log(data['error']))
-ax.plot(np.log(data['h']), np.log(data['h']**2))
+ax.plot(np.log(jacobi_data['h']), np.log(jacobi_data['error']), label = "Jacobi", **line_props)
+ax.plot(np.log(conjugate_gradient_data['h']), np.log(conjugate_gradient_data['error']), label = "C. G.", **line_props, markersize = 3)
+ax.plot(np.log(jacobi_data['h']), np.log(jacobi_data['h']**2), label = r"$h \mapsto h^2$", linestyle = "--")
+ax.set(xlabel = r"$\log(h)$", ylabel = r"$\log(\|e_h\|)$")
+ax.legend()
 plt.show()

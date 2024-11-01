@@ -112,9 +112,6 @@ void buildListsNodesMPI(Mesh& mesh)
     if (nTask != myRank) {
       for (int nExch = 0; nExch < mesh.numNodesToExch(nTask); nExch++) {
         int nodeIndex = mesh.nodesToExch(nTask, nExch);
-        // if (nodeIndex > 0) {
-        //     nodeMultiplicityMap[nodeIndex]++;
-        // }
         nodeMultiplicityMap[nodeIndex]++;
       }
     }
@@ -126,14 +123,8 @@ void buildListsNodesMPI(Mesh& mesh)
   for (std::unordered_map<int, int>::const_iterator it = nodeMultiplicityMap.begin(); it != nodeMultiplicityMap.end(); ++it) {
     int nodeIndex = it->first;
     int multiplicity = it->second;
-    // cout << "nodeIndex : " << nodeIndex << ", multiplicity : " << multiplicity << endl;
     mesh.nodeMultiplicity(nodeIndex) = multiplicity;
-    // if (nodeIndex > 0) {
-    //   cout << "nodeIndex : " << nodeIndex << ", multiplicity : " << multiplicity << endl;
-    //   mesh.nodeMultiplicity(nodeIndex - 1) = multiplicity;
-    // }
   }
-  // cout << mesh.nodeMultiplicity << endl;
 }
 
 //================================================================================
